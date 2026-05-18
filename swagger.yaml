@@ -1,0 +1,528 @@
+openapi: 3.0.3
+
+info:
+  title: AlNas Project Management API
+  version: 1.0.0
+  description: Full API documentation for AlNas project management backend
+
+servers:
+  - url: http://localhost:5000/alnasPj
+    description: Local Development Server
+
+tags:
+  - name: Auth
+  - name: Workspaces
+  - name: Projects
+  - name: Project Members
+  - name: Labels
+  - name: Tasks
+  - name: Task Assignees
+  - name: Task Labels
+  - name: Checklists
+  - name: Checklist Items
+  - name: Comments
+  - name: Activity
+  - name: Notifications
+  - name: Search
+  - name: My Tasks
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    LoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          example: "306"
+
+        password:
+          type: string
+          example: "password123"
+
+    LoginResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+
+        refresh_token:
+          type: string
+
+    Workspace:
+      type: object
+      properties:
+        id:
+          type: integer
+
+        department_id:
+          type: integer
+
+        name:
+          type: string
+
+        description:
+          type: string
+
+        color:
+          type: string
+
+    Project:
+      type: object
+      properties:
+        id:
+          type: integer
+
+        workspace_id:
+          type: integer
+
+        section_id:
+          type: integer
+          nullable: true
+
+        name:
+          type: string
+
+        description:
+          type: string
+
+        visibility:
+          type: string
+
+    Task:
+      type: object
+      properties:
+        id:
+          type: integer
+
+        project_id:
+          type: integer
+
+        title:
+          type: string
+
+        description:
+          type: string
+
+        status:
+          type: string
+
+        priority:
+          type: string
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+
+        title:
+          type: string
+
+        message:
+          type: string
+
+        is_read:
+          type: boolean
+
+security:
+  - bearerAuth: []
+
+paths:
+  /auth/login:
+    post:
+      tags:
+        - Auth
+
+      summary: Login
+
+      requestBody:
+        required: true
+
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+
+      responses:
+        "200":
+          description: Login successful
+
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+
+  /auth/logout:
+    post:
+      tags:
+        - Auth
+
+      summary: Logout
+
+      responses:
+        "200":
+          description: Logout successful
+
+  /auth/me:
+    get:
+      tags:
+        - Auth
+
+      summary: Get current user
+
+      responses:
+        "200":
+          description: Current authenticated user
+
+  /workspaces:
+    get:
+      tags:
+        - Workspaces
+
+      summary: Get all workspaces
+
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+
+        - in: query
+          name: limit
+          schema:
+            type: integer
+
+      responses:
+        "200":
+          description: Workspace list
+
+  /workspaces/{id}:
+    get:
+      tags:
+        - Workspaces
+
+      summary: Get workspace by id
+
+      parameters:
+        - in: path
+          name: id
+          required: true
+
+          schema:
+            type: integer
+
+      responses:
+        "200":
+          description: Workspace details
+
+    patch:
+      tags:
+        - Workspaces
+
+      summary: Update workspace
+
+      parameters:
+        - in: path
+          name: id
+          required: true
+
+          schema:
+            type: integer
+
+      requestBody:
+        required: true
+
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Workspace"
+
+      responses:
+        "200":
+          description: Workspace updated
+
+  /workspaces/{id}/archive:
+    post:
+      tags:
+        - Workspaces
+
+      summary: Archive workspace
+
+      parameters:
+        - in: path
+          name: id
+          required: true
+
+          schema:
+            type: integer
+
+      responses:
+        "200":
+          description: Workspace archived
+
+  /workspaces/{wId}/projects:
+    get:
+      tags:
+        - Projects
+
+      summary: Get workspace projects
+
+      parameters:
+        - in: path
+          name: wId
+          required: true
+
+          schema:
+            type: integer
+
+      responses:
+        "200":
+          description: Project list
+
+    post:
+      tags:
+        - Projects
+
+      summary: Create project
+
+      parameters:
+        - in: path
+          name: wId
+          required: true
+
+          schema:
+            type: integer
+
+      requestBody:
+        required: true
+
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Project"
+
+      responses:
+        "201":
+          description: Project created
+
+  /projects/{id}:
+    get:
+      tags:
+        - Projects
+
+      summary: Get project
+
+      parameters:
+        - in: path
+          name: id
+          required: true
+
+          schema:
+            type: integer
+
+      responses:
+        "200":
+          description: Project details
+
+    patch:
+      tags:
+        - Projects
+
+      summary: Update project
+
+      parameters:
+        - in: path
+          name: id
+          required: true
+
+          schema:
+            type: integer
+
+      responses:
+        "200":
+          description: Project updated
+
+    delete:
+      tags:
+        - Projects
+
+      summary: Delete project
+
+      parameters:
+        - in: path
+          name: id
+          required: true
+
+          schema:
+            type: integer
+
+      responses:
+        "200":
+          description: Project deleted
+
+  /projects/{id}/tasks:
+    get:
+      tags:
+        - Tasks
+
+      summary: Get project tasks
+
+      parameters:
+        - in: path
+          name: id
+          required: true
+
+          schema:
+            type: integer
+
+      responses:
+        "200":
+          description: Task list
+
+    post:
+      tags:
+        - Tasks
+
+      summary: Create task
+
+      parameters:
+        - in: path
+          name: id
+          required: true
+
+          schema:
+            type: integer
+
+      requestBody:
+        required: true
+
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Task"
+
+      responses:
+        "201":
+          description: Task created
+
+  /tasks/{id}:
+    get:
+      tags:
+        - Tasks
+
+      summary: Get task
+
+      parameters:
+        - in: path
+          name: id
+          required: true
+
+          schema:
+            type: integer
+
+      responses:
+        "200":
+          description: Task details
+
+    patch:
+      tags:
+        - Tasks
+
+      summary: Update task
+
+      parameters:
+        - in: path
+          name: id
+          required: true
+
+          schema:
+            type: integer
+
+      responses:
+        "200":
+          description: Task updated
+
+    delete:
+      tags:
+        - Tasks
+
+      summary: Delete task
+
+      parameters:
+        - in: path
+          name: id
+          required: true
+
+          schema:
+            type: integer
+
+      responses:
+        "200":
+          description: Task deleted
+
+  /notifications:
+    get:
+      tags:
+        - Notifications
+
+      summary: Get notifications
+
+      responses:
+        "200":
+          description: Notification list
+
+  /notifications/unread-count:
+    get:
+      tags:
+        - Notifications
+
+      summary: Get unread notifications count
+
+      responses:
+        "200":
+          description: Unread count
+
+  /search:
+    get:
+      tags:
+        - Search
+
+      summary: Global search
+
+      parameters:
+        - in: query
+          name: q
+          required: true
+
+          schema:
+            type: string
+
+        - in: query
+          name: type
+
+          schema:
+            type: string
+
+      responses:
+        "200":
+          description: Search results
+
+  /me/tasks:
+    get:
+      tags:
+        - My Tasks
+
+      summary: Get my assigned tasks
+
+      responses:
+        "200":
+          description: My tasks list
