@@ -1,13 +1,13 @@
 openapi: 3.0.3
 
 info:
-  title: AlNas Project Management API
+  title: AlNas Projects API
   version: 1.0.0
-  description: Full API documentation for AlNas Project Management Backend.
+  description: Small internal project management API using HR DB users.
 
 servers:
   - url: http://localhost:5000/alnasPj
-    description: Local Development Server
+    description: Local server
 
 security:
   - bearerAuth: []
@@ -15,20 +15,11 @@ security:
 tags:
   - name: Auth
   - name: Workspaces
-  - name: Workspace Settings
   - name: Projects
-  - name: Project Members
-  - name: Labels
   - name: Tasks
-  - name: Task Assignees
-  - name: Task Labels
-  - name: Checklists
-  - name: Checklist Items
+  - name: Assignees
   - name: Comments
-  - name: Activity
   - name: My Tasks
-  - name: Notifications
-  - name: Search
 
 components:
   securitySchemes:
@@ -57,60 +48,67 @@ components:
       name: search
       schema:
         type: string
-        example: ahmed
+        example: backend
 
   schemas:
-    ErrorResponse:
-      type: object
-      properties:
-        message:
-          type: string
-          example: Server error
-
     LoginRequest:
       type: object
-      required:
-        - username
-        - password
+      required: [username, password]
       properties:
         username:
           type: string
           example: "306"
         password:
           type: string
-          example: password123
+          example: "password123"
 
-    RefreshRequest:
+    LoginResponse:
       type: object
-      required:
-        - refresh_token
       properties:
+        message:
+          type: string
+          example: Login successful
+        token_type:
+          type: string
+          example: Bearer
+        access_token:
+          type: string
         refresh_token:
           type: string
+        user:
+          $ref: "#/components/schemas/User"
 
     User:
       type: object
       properties:
         id:
           type: integer
+          example: 83
         username:
           type: string
+          example: "306"
         email:
           type: string
           nullable: true
         display_name:
           type: string
+          example: احمد عبدالفتاح محمود محمد
         role:
           type: string
+          example: section_head
         employee_id:
           type: integer
+          example: 83
         employee_number:
           type: integer
+          example: 306
         is_active:
           type: boolean
+          example: true
 
-    WorkspaceUpdate:
+    WorkspaceCreate:
       type: object
+      required: [department_id, name]
       properties:
         department_id:
           type: integer
@@ -120,290 +118,117 @@ components:
           example: IT Workspace
         description:
           type: string
+          example: Internal IT projects
         color:
           type: string
           example: "#6366F1"
 
     ProjectCreate:
       type: object
-      required:
-        - name
+      required: [name]
       properties:
-        section_id:
-          type: integer
-          nullable: true
         name:
           type: string
           example: Backend Project
         description:
           type: string
+          example: API and database work
         color:
           type: string
           example: "#6366F1"
-        icon:
-          type: string
-          example: folder
-        visibility:
-          type: string
-          enum:
-            - department
-            - section
-            - private
-        position:
-          type: integer
-          example: 1
 
-    ProjectMemberCreate:
+    ProjectUpdate:
       type: object
-      required:
-        - user_id
-      properties:
-        user_id:
-          type: integer
-          example: 83
-        role:
-          type: string
-          enum:
-            - admin
-            - member
-            - viewer
-          example: member
-
-    ProjectMemberUpdate:
-      type: object
-      required:
-        - role
-      properties:
-        role:
-          type: string
-          enum:
-            - admin
-            - member
-            - viewer
-
-    LabelCreate:
-      type: object
-      required:
-        - name
       properties:
         name:
           type: string
-          example: Backend
+          example: Updated Backend Project
+        description:
+          type: string
+          example: Updated description
         color:
           type: string
           example: "#3B82F6"
-
-    TaskCreate:
-      type: object
-      required:
-        - title
-      properties:
-        title:
-          type: string
-          example: Build auth module
-        description:
-          type: string
-        status:
-          type: string
-          enum:
-            - new
-            - in_progress
-            - review
-            - blocked
-            - done
-        priority:
-          type: string
-          enum:
-            - low
-            - medium
-            - high
-            - critical
-        due_date:
-          type: string
-          format: date
-        start_date:
-          type: string
-          format: date
-        estimated_hours:
-          type: number
-          example: 4
-        position:
+        workspace_id:
           type: integer
           example: 1
 
-    TaskMove:
+    TaskCreate:
       type: object
-      required:
-        - project_id
+      required: [title]
       properties:
-        project_id:
-          type: integer
-        position:
-          type: integer
+        title:
+          type: string
+          example: Build login API
+        description:
+          type: string
+          example: Create auth controller and JWT middleware
+        status:
+          type: string
+          enum: [todo, in_progress, done]
+          example: todo
+        priority:
+          type: string
+          enum: [low, medium, high]
+          example: high
+        due_date:
+          type: string
+          format: date
+          nullable: true
+          example: "2026-06-01"
 
-    Reorder:
+    TaskUpdate:
       type: object
-      required:
-        - position
       properties:
-        position:
+        title:
+          type: string
+          example: Build login and logout API
+        description:
+          type: string
+          example: Updated task description
+        status:
+          type: string
+          enum: [todo, in_progress, done]
+        priority:
+          type: string
+          enum: [low, medium, high]
+        due_date:
+          type: string
+          format: date
+          nullable: true
+        project_id:
           type: integer
           example: 2
 
     AssigneeCreate:
       type: object
-      required:
-        - user_id
+      required: [user_id]
       properties:
         user_id:
           type: integer
           example: 83
 
-    TaskLabelCreate:
-      type: object
-      required:
-        - label_id
-      properties:
-        label_id:
-          type: integer
-          example: 3
-
-    ChecklistCreate:
-      type: object
-      properties:
-        title:
-          type: string
-          example: Backend Tasks
-        position:
-          type: integer
-          example: 1
-
-    ChecklistItemCreate:
-      type: object
-      required:
-        - content
-      properties:
-        content:
-          type: string
-          example: Create task controller
-        assigned_to:
-          type: integer
-          nullable: true
-        due_date:
-          type: string
-          format: date
-          nullable: true
-        position:
-          type: integer
-
-    ChecklistItemUpdate:
-      type: object
-      properties:
-        content:
-          type: string
-        is_completed:
-          type: integer
-          enum:
-            - 0
-            - 1
-        assigned_to:
-          type: integer
-          nullable: true
-        due_date:
-          type: string
-          format: date
-          nullable: true
-        position:
-          type: integer
-
     CommentCreate:
       type: object
-      required:
-        - content
+      required: [content]
       properties:
         content:
           type: string
           example: This task is ready for review
-        parent_id:
-          type: integer
-          nullable: true
 
-    Notification:
+    ErrorResponse:
       type: object
       properties:
-        id:
-          type: integer
-        user_id:
-          type: integer
-        type:
+        message:
           type: string
-        title:
-          type: string
-        body:
-          type: string
-        data:
-          type: object
-        is_read:
-          type: integer
-        read_at:
-          type: string
-          nullable: true
-        created_at:
-          type: string
-
-    WorkspaceSettings:
-      type: object
-      properties:
-        allow_project_creation:
-          type: integer
-          enum:
-            - 0
-            - 1
-        allow_member_invites:
-          type: integer
-          enum:
-            - 0
-            - 1
-        default_project_visibility:
-          type: string
-          enum:
-            - department
-            - section
-            - private
-        default_task_priority:
-          type: string
-          enum:
-            - low
-            - medium
-            - high
-            - critical
-
-    WorkspacePermissions:
-      type: object
-      properties:
-        can_view:
-          type: string
-          example: department
-        can_create_projects:
-          type: string
-          example: department_manager
-        can_archive_projects:
-          type: string
-          example: admin
-        can_manage_members:
-          type: string
-          example: admin
-        can_manage_labels:
-          type: string
-          example: member
+          example: Server error
 
 paths:
   /auth/login:
     post:
       security: []
-      tags:
-        - Auth
-      summary: Login
+      tags: [Auth]
+      summary: Login using HR user
       requestBody:
         required: true
         content:
@@ -413,57 +238,66 @@ paths:
       responses:
         "200":
           description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
+          description: Invalid credentials
 
   /auth/logout:
     post:
-      tags:
-        - Auth
-      summary: Logout
+      tags: [Auth]
+      summary: Logout current user
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh_token:
+                  type: string
       responses:
         "200":
           description: Logout successful
 
   /auth/me:
     get:
-      tags:
-        - Auth
+      tags: [Auth]
       summary: Get current authenticated user
       responses:
         "200":
           description: Current user
 
-  /auth/refresh:
+  /workspaces:
+    get:
+      tags: [Workspaces]
+      summary: Get workspaces
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Search"
+      responses:
+        "200":
+          description: Workspace list
+
     post:
-      security: []
-      tags:
-        - Auth
-      summary: Refresh access token
+      tags: [Workspaces]
+      summary: Create workspace
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RefreshRequest"
+              $ref: "#/components/schemas/WorkspaceCreate"
       responses:
-        "200":
-          description: Token refreshed
-
-  /workspaces:
-    get:
-      tags:
-        - Workspaces
-      summary: Get workspaces
-      parameters:
-        - $ref: "#/components/parameters/Page"
-        - $ref: "#/components/parameters/Limit"
-      responses:
-        "200":
-          description: Workspace list
+        "201":
+          description: Workspace created
 
   /workspaces/{id}:
     get:
-      tags:
-        - Workspaces
+      tags: [Workspaces]
       summary: Get workspace by ID
       parameters:
         - in: path
@@ -475,139 +309,29 @@ paths:
         "200":
           description: Workspace details
 
-    patch:
-      tags:
-        - Workspaces
-      summary: Update workspace
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/WorkspaceUpdate"
-      responses:
-        "200":
-          description: Workspace updated
-
-  /workspaces/{id}/archive:
-    post:
-      tags:
-        - Workspaces
-      summary: Archive workspace
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Workspace archived
-
-  /workspaces/{id}/settings:
+  /workspaces/{id}/projects:
     get:
-      tags:
-        - Workspace Settings
-      summary: Get workspace settings
+      tags: [Projects]
+      summary: Get workspace projects
       parameters:
         - in: path
           name: id
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Workspace settings
-
-    patch:
-      tags:
-        - Workspace Settings
-      summary: Update workspace settings
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/WorkspaceSettings"
-      responses:
-        "200":
-          description: Workspace settings updated
-
-  /workspaces/{id}/permissions:
-    get:
-      tags:
-        - Workspace Settings
-      summary: Get workspace permissions
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Workspace permissions
-
-    patch:
-      tags:
-        - Workspace Settings
-      summary: Update workspace permissions
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/WorkspacePermissions"
-      responses:
-        "200":
-          description: Workspace permissions updated
-
-  /workspaces/{wId}/projects:
-    get:
-      tags:
-        - Projects
-      summary: Get projects inside workspace
-      parameters:
-        - in: path
-          name: wId
           required: true
           schema:
             type: integer
         - $ref: "#/components/parameters/Page"
         - $ref: "#/components/parameters/Limit"
-        - in: query
-          name: includeArchived
-          schema:
-            type: boolean
+        - $ref: "#/components/parameters/Search"
       responses:
         "200":
           description: Project list
 
     post:
-      tags:
-        - Projects
+      tags: [Projects]
       summary: Create project inside workspace
       parameters:
         - in: path
-          name: wId
+          name: id
           required: true
           schema:
             type: integer
@@ -623,8 +347,7 @@ paths:
 
   /projects/{id}:
     get:
-      tags:
-        - Projects
+      tags: [Projects]
       summary: Get project by ID
       parameters:
         - in: path
@@ -637,8 +360,7 @@ paths:
           description: Project details
 
     patch:
-      tags:
-        - Projects
+      tags: [Projects]
       summary: Update project
       parameters:
         - in: path
@@ -651,14 +373,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ProjectCreate"
+              $ref: "#/components/schemas/ProjectUpdate"
       responses:
         "200":
           description: Project updated
 
     delete:
-      tags:
-        - Projects
+      tags: [Projects]
       summary: Delete project
       parameters:
         - in: path
@@ -670,227 +391,9 @@ paths:
         "200":
           description: Project deleted
 
-  /projects/{id}/archive:
-    post:
-      tags:
-        - Projects
-      summary: Archive project
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Project archived
-
-  /projects/{id}/restore:
-    post:
-      tags:
-        - Projects
-      summary: Restore project
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Project restored
-
-  /projects/{id}/duplicate:
-    post:
-      tags:
-        - Projects
-      summary: Duplicate project
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      responses:
-        "201":
-          description: Project duplicated
-
-  /projects/{id}/members:
-    get:
-      tags:
-        - Project Members
-      summary: Get project members
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-        - $ref: "#/components/parameters/Page"
-        - $ref: "#/components/parameters/Limit"
-      responses:
-        "200":
-          description: Project members
-
-    post:
-      tags:
-        - Project Members
-      summary: Add project member
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ProjectMemberCreate"
-      responses:
-        "201":
-          description: Project member added
-
-  /projects/{pId}/members/{userId}:
-    patch:
-      tags:
-        - Project Members
-      summary: Update project member role
-      parameters:
-        - in: path
-          name: pId
-          required: true
-          schema:
-            type: integer
-        - in: path
-          name: userId
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ProjectMemberUpdate"
-      responses:
-        "200":
-          description: Project member updated
-
-    delete:
-      tags:
-        - Project Members
-      summary: Remove project member
-      parameters:
-        - in: path
-          name: pId
-          required: true
-          schema:
-            type: integer
-        - in: path
-          name: userId
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Project member removed
-
-  /projects/{id}/members/available:
-    get:
-      tags:
-        - Project Members
-      summary: Get available users for project
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-        - $ref: "#/components/parameters/Page"
-        - $ref: "#/components/parameters/Limit"
-        - $ref: "#/components/parameters/Search"
-      responses:
-        "200":
-          description: Available users
-
-  /projects/{id}/labels:
-    get:
-      tags:
-        - Labels
-      summary: Get project labels
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-        - $ref: "#/components/parameters/Page"
-        - $ref: "#/components/parameters/Limit"
-      responses:
-        "200":
-          description: Labels list
-
-    post:
-      tags:
-        - Labels
-      summary: Create label
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LabelCreate"
-      responses:
-        "201":
-          description: Label created
-
-  /labels/{id}:
-    patch:
-      tags:
-        - Labels
-      summary: Update label
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LabelCreate"
-      responses:
-        "200":
-          description: Label updated
-
-    delete:
-      tags:
-        - Labels
-      summary: Delete label
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Label deleted
-
   /projects/{id}/tasks:
     get:
-      tags:
-        - Tasks
+      tags: [Tasks]
       summary: Get project tasks
       parameters:
         - in: path
@@ -900,27 +403,24 @@ paths:
             type: integer
         - $ref: "#/components/parameters/Page"
         - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Search"
         - in: query
           name: status
           schema:
             type: string
+            enum: [todo, in_progress, done]
         - in: query
           name: priority
           schema:
             type: string
-        - in: query
-          name: includeArchived
-          schema:
-            type: boolean
-        - $ref: "#/components/parameters/Search"
+            enum: [low, medium, high]
       responses:
         "200":
           description: Task list
 
     post:
-      tags:
-        - Tasks
-      summary: Create task
+      tags: [Tasks]
+      summary: Create task inside project
       parameters:
         - in: path
           name: id
@@ -939,8 +439,7 @@ paths:
 
   /tasks/{id}:
     get:
-      tags:
-        - Tasks
+      tags: [Tasks]
       summary: Get task by ID
       parameters:
         - in: path
@@ -953,8 +452,7 @@ paths:
           description: Task details
 
     patch:
-      tags:
-        - Tasks
+      tags: [Tasks]
       summary: Update task
       parameters:
         - in: path
@@ -967,14 +465,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/TaskCreate"
+              $ref: "#/components/schemas/TaskUpdate"
       responses:
         "200":
           description: Task updated
 
     delete:
-      tags:
-        - Tasks
+      tags: [Tasks]
       summary: Delete task
       parameters:
         - in: path
@@ -986,98 +483,10 @@ paths:
         "200":
           description: Task deleted
 
-  /tasks/{id}/archive:
-    post:
-      tags:
-        - Tasks
-      summary: Archive task
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Task archived
-
-  /tasks/{id}/restore:
-    post:
-      tags:
-        - Tasks
-      summary: Restore task
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Task restored
-
-  /tasks/{id}/duplicate:
-    post:
-      tags:
-        - Tasks
-      summary: Duplicate task
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      responses:
-        "201":
-          description: Task duplicated
-
-  /tasks/{id}/reorder:
-    patch:
-      tags:
-        - Tasks
-      summary: Reorder task
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/Reorder"
-      responses:
-        "200":
-          description: Task reordered
-
-  /tasks/{id}/move:
-    post:
-      tags:
-        - Tasks
-      summary: Move task to another project
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/TaskMove"
-      responses:
-        "200":
-          description: Task moved
-
   /tasks/{id}/assignees:
     post:
-      tags:
-        - Task Assignees
-      summary: Add task assignee
+      tags: [Assignees]
+      summary: Add assignee to task
       parameters:
         - in: path
           name: id
@@ -1094,14 +503,13 @@ paths:
         "201":
           description: Assignee added
 
-  /tasks/{tId}/assignees/{userId}:
+  /tasks/{taskId}/assignees/{userId}:
     delete:
-      tags:
-        - Task Assignees
-      summary: Remove task assignee
+      tags: [Assignees]
+      summary: Remove assignee from task
       parameters:
         - in: path
-          name: tId
+          name: taskId
           required: true
           schema:
             type: integer
@@ -1114,163 +522,9 @@ paths:
         "200":
           description: Assignee removed
 
-  /tasks/{id}/labels:
-    post:
-      tags:
-        - Task Labels
-      summary: Add label to task
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/TaskLabelCreate"
-      responses:
-        "201":
-          description: Task label added
-
-  /tasks/{tId}/labels/{labelId}:
-    delete:
-      tags:
-        - Task Labels
-      summary: Remove label from task
-      parameters:
-        - in: path
-          name: tId
-          required: true
-          schema:
-            type: integer
-        - in: path
-          name: labelId
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Task label removed
-
-  /tasks/{id}/checklists:
-    post:
-      tags:
-        - Checklists
-      summary: Create checklist for task
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ChecklistCreate"
-      responses:
-        "201":
-          description: Checklist created
-
-  /checklists/{id}:
-    patch:
-      tags:
-        - Checklists
-      summary: Update checklist
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ChecklistCreate"
-      responses:
-        "200":
-          description: Checklist updated
-
-    delete:
-      tags:
-        - Checklists
-      summary: Delete checklist
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Checklist deleted
-
-  /checklists/{id}/items:
-    post:
-      tags:
-        - Checklist Items
-      summary: Create checklist item
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ChecklistItemCreate"
-      responses:
-        "201":
-          description: Checklist item created
-
-  /checklist-items/{id}:
-    patch:
-      tags:
-        - Checklist Items
-      summary: Update checklist item
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ChecklistItemUpdate"
-      responses:
-        "200":
-          description: Checklist item updated
-
-    delete:
-      tags:
-        - Checklist Items
-      summary: Delete checklist item
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Checklist item deleted
-
   /tasks/{id}/comments:
     get:
-      tags:
-        - Comments
+      tags: [Comments]
       summary: Get task comments
       parameters:
         - in: path
@@ -1282,11 +536,10 @@ paths:
         - $ref: "#/components/parameters/Limit"
       responses:
         "200":
-          description: Task comments
+          description: Comment list
 
     post:
-      tags:
-        - Comments
+      tags: [Comments]
       summary: Create task comment
       parameters:
         - in: path
@@ -1304,201 +557,24 @@ paths:
         "201":
           description: Comment created
 
-  /comments/{id}:
-    patch:
-      tags:
-        - Comments
-      summary: Update comment
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - content
-              properties:
-                content:
-                  type: string
-      responses:
-        "200":
-          description: Comment updated
-
-    delete:
-      tags:
-        - Comments
-      summary: Delete comment
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Comment deleted
-
-  /tasks/{id}/activity:
-    get:
-      tags:
-        - Activity
-      summary: Get task activity log
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-        - $ref: "#/components/parameters/Page"
-        - $ref: "#/components/parameters/Limit"
-      responses:
-        "200":
-          description: Task activity
-
-  /projects/{id}/activity:
-    get:
-      tags:
-        - Activity
-      summary: Get project activity log
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-        - $ref: "#/components/parameters/Page"
-        - $ref: "#/components/parameters/Limit"
-      responses:
-        "200":
-          description: Project activity
-
   /me/tasks:
     get:
-      tags:
-        - My Tasks
-      summary: Get authenticated user's assigned tasks
+      tags: [My Tasks]
+      summary: Get authenticated user assigned tasks
       parameters:
         - $ref: "#/components/parameters/Page"
         - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Search"
         - in: query
           name: status
           schema:
             type: string
+            enum: [todo, in_progress, done]
         - in: query
           name: priority
           schema:
             type: string
-        - in: query
-          name: includeArchived
-          schema:
-            type: boolean
-        - $ref: "#/components/parameters/Search"
+            enum: [low, medium, high]
       responses:
         "200":
           description: My assigned tasks
-
-  /notifications:
-    get:
-      tags:
-        - Notifications
-      summary: Get notifications
-      parameters:
-        - $ref: "#/components/parameters/Page"
-        - $ref: "#/components/parameters/Limit"
-        - in: query
-          name: unreadOnly
-          schema:
-            type: boolean
-        - in: query
-          name: type
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Notifications list
-
-  /notifications/{id}/read:
-    patch:
-      tags:
-        - Notifications
-      summary: Mark notification as read
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Notification marked as read
-
-  /notifications/read-all:
-    patch:
-      tags:
-        - Notifications
-      summary: Mark all notifications as read
-      responses:
-        "200":
-          description: All notifications marked as read
-
-  /notifications/{id}:
-    delete:
-      tags:
-        - Notifications
-      summary: Delete notification
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Notification deleted
-
-  /notifications/unread-count:
-    get:
-      tags:
-        - Notifications
-      summary: Get unread notification count
-      responses:
-        "200":
-          description: Unread notification count
-
-  /search:
-    get:
-      tags:
-        - Search
-      summary: Global search
-      parameters:
-        - in: query
-          name: q
-          required: true
-          schema:
-            type: string
-            example: backend
-        - in: query
-          name: type
-          schema:
-            type: string
-            enum:
-              - all
-              - workspaces
-              - projects
-              - tasks
-              - comments
-            example: all
-        - in: query
-          name: limit
-          schema:
-            type: integer
-            example: 10
-      responses:
-        "200":
-          description: Search results
